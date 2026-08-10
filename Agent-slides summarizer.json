@@ -1,0 +1,139 @@
+{
+  "name": "Agent-slides summarizer",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a personal study coach.\n\nWhen the user asks about lecture material, ALWAYS use the Google Drive tool first to retrieve the available lecture PDF.\n\nBase your answer on the retrieved lecture material.\nExplain concepts in simple English.\nDo not rely on general knowledge when the answer can be found in the lecture.\nIf the information is not present in the lecture, say so clearly.\n\nUser request:\n{{$json.body.message}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -48,
+        -64
+      ],
+      "id": "71d35c50-352a-4c05-869d-eb74560ac699",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "llama-3.3-70b-versatile",
+          "mode": "list",
+          "cachedResultName": "llama-3.3-70b-versatile"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        160
+      ],
+      "id": "66c8fdf3-e08a-4537-b067-f3b898e4141d",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "znbR2tkIWF2T2eYy",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "study-coach",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -320,
+        -48
+      ],
+      "id": "4fb45ea7-1dc9-496f-b6fd-7646dab2dbb3",
+      "name": "Webhook",
+      "webhookId": "626fe207-6fd2-4b43-b131-0abdce17d04f"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "12HmXnXfCsxQ-JuvoLjxMemvNM-b7Uzit",
+          "mode": "list",
+          "cachedResultName": "AI-234 Data Structures- Lec 12.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/12HmXnXfCsxQ-JuvoLjxMemvNM-b7Uzit/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [
+        96,
+        208
+      ],
+      "id": "e1505699-bd68-4e96-9e86-9d0d3a976a20",
+      "name": "Download file in Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "IKDT58V8Jru2dv9z",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file in Google Drive": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "7e03f6a9-06f0-48e3-9863-121c407144bd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "59f08bec4ce6648d8f3ae280b6f14f77cb847d9bb1ce25449b420663754bd9fe"
+  },
+  "nodeGroups": [],
+  "id": "vCbvhDh3dWe3YXvd",
+  "tags": []
+}
