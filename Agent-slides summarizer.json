@@ -4,14 +4,14 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=You are a university study coach.\n\nThe user uploaded one lecture PDF.\n\nSelected output type:\n{{$('On form submission').item.json.output_type}}\n\nSelected output format:\n{{$('On form submission').item.json.output_format}}\n\nLecture content:\n{{$json.text}}\n\nYour task is to create ONLY the selected study material using ONLY the lecture content provided above.\n\nCONTENT RULES:\n- Do not use outside knowledge.\n- Do not invent information.\n- Use simple English.\n- Do not include introductions or conclusions.\n- Do not explain your process.\n- Do not include any other study material type.\n\nIF OUTPUT TYPE IS \"Quiz\":\n- Create exactly 10 multiple-choice questions.\n- Each question must have exactly 4 options: A, B, C, D.\n- Use this exact HTML structure for every question:\n\n<div class=\"question\">\n  <h2>Question 1</h2>\n  <p>Question text</p>\n  <ol class=\"options\" type=\"A\">\n    <li>Option A</li>\n    <li>Option B</li>\n    <li>Option C</li>\n    <li>Option D</li>\n  </ol>\n  <p class=\"correct\">Correct Answer: A</p>\n</div>\n\n- Put each option in its own <li> element.\n- Never put multiple options inside one <p>.\n- Never use <br> to separate options.\n- Show the correct answer after the options.\n- Output ONLY the quiz.\n\nIF OUTPUT TYPE IS \"Summary\":\n- Create clear and concise study notes.\n- Organize the important concepts from the lecture.\n- Output ONLY the summary.\n\nIF OUTPUT TYPE IS \"Flashcards\":\n- Create useful question-and-answer flashcards covering the important concepts.\n- Output ONLY the flashcards.\n\nHTML OUTPUT RULES:\n- Return a complete HTML document.\n- Start exactly with <!DOCTYPE html>.\n- Include <html>, <head>, <style>, and <body>.\n- Add a meaningful title based on the lecture topic.\n- Use headings, paragraphs, lists, and other appropriate HTML elements.\n- Add clean professional CSS inside <style>.\n- Make the document suitable for PDF conversion.\n- Do not use Markdown.\n- Do not use code fences.\n- Do not put any text before or after the HTML document.\n- The selected output format will be handled by later workflow nodes. Do not create or describe a file format.\n- Every HTML tag must be valid HTML.\n- Never modify HTML tag syntax.\n- Every <li> tag must start exactly as <li>.\n- Never output malformed tags such as <li%B, <li%D, <li*A, or similar.\n- Never insert **, markdown, or hidden markers inside HTML.\n- Before returning the HTML, validate that all HTML tags are syntactically valid.\n- use this style\n<style>\nbody {\n    font-family: Arial, sans-serif;\n    margin: 40px;\n    line-height: 1.6;\n}\n\nh1 {\n    text-align: center;\n    margin-bottom: 30px;\n}\n\n.question {\n    margin-bottom: 30px;\n    page-break-inside: avoid;\n}\n\n.question h2 {\n    margin-bottom: 8px;\n}\n\n.options {\n    margin-top: 10px;\n    padding-left: 30px;\n}\n\n.options li {\n    margin-bottom: 8px;\n    padding-left: 5px;\n}\n\n.correct {\n    margin-top: 10px;\n    font-weight: bold;\n}\n</style>",
+        "text": "=You are a file retrieval agent.\n\nUser's requested file:\n{{$json.google_drive_file}}\n\nYour ONLY job is to retrieve the requested PDF from Google Drive.\n\nFollow these steps exactly:\n\n1. Use Search files and folders once to find the requested file.\n2. From the search result, get the file ID.\n3. Use Download file once with the file ID returned by the search.\n4. Stop immediately after the download.\n5. Do not search again.\n6. Do not download again.\n7. Do not upload anything.\n8. Do not create or analyze study material.\n\nThe downloaded PDF will be passed to the Extract from File node.\n\nIf the file is not found, report that the file was not found.\n",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1344,
-        704
+        1072,
+        848
       ],
       "id": "b59c60b7-5b6c-464b-80bd-14523dc320e6",
       "name": "AI Agent"
@@ -30,8 +30,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        1352,
-        936
+        960,
+        1072
       ],
       "id": "220a2920-f856-4790-bf23-205ebe3e008b",
       "name": "OpenAI Chat Model1",
@@ -47,18 +47,16 @@
         "operation": "download",
         "fileId": {
           "__rl": true,
-          "value": "12HmXnXfCsxQ-JuvoLjxMemvNM-b7Uzit",
-          "mode": "list",
-          "cachedResultName": "AI-234 Data Structures- Lec 12.pdf",
-          "cachedResultUrl": "https://drive.google.com/file/d/12HmXnXfCsxQ-JuvoLjxMemvNM-b7Uzit/view?usp=drivesdk"
+          "value": "={{ $fromAI('File', `The Google Drive file ID returned by the search tool`, 'string') }}",
+          "mode": "id"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.googleDriveTool",
       "typeVersion": 3,
       "position": [
-        1480,
-        936
+        1088,
+        1072
       ],
       "id": "3ffebd87-bab8-4f40-81d1-4d9fcf40ec9c",
       "name": "Download file in Google Drive",
@@ -79,6 +77,21 @@
               "fieldLabel": "Lecture PDF",
               "fieldType": "file",
               "fieldName": "lecture_file"
+            },
+            {
+              "fieldLabel": "Where is your lecture PDF?",
+              "fieldType": "dropdown",
+              "fieldName": "lecture_source",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Upload PDF"
+                  },
+                  {
+                    "option": "Google Drive"
+                  }
+                ]
+              }
             },
             {
               "fieldLabel": "What would you like to create?",
@@ -112,6 +125,11 @@
                   }
                 ]
               }
+            },
+            {
+              "fieldLabel": "Google Drive PDF name",
+              "fieldName": "google_drive_file",
+              "placeholder": "Example: AI-234 Data Structures- Lec 12.pdf"
             }
           ]
         },
@@ -120,8 +138,8 @@
       "type": "n8n-nodes-base.formTrigger",
       "typeVersion": 2.6,
       "position": [
-        -496,
-        624
+        -768,
+        864
       ],
       "id": "8cbfc752-0f2a-44bd-8621-80f14625eaf4",
       "name": "On form submission",
@@ -136,8 +154,8 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        1120,
-        704
+        1536,
+        640
       ],
       "id": "bcd90bb3-4e10-42a3-aaa7-2d002ccaafde",
       "name": "Extract from File"
@@ -151,8 +169,8 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
       "position": [
-        2032,
-        608
+        2688,
+        752
       ],
       "id": "ec422988-78b9-40bc-a70e-a2258b2a37c7",
       "name": "Read/Write Files from Disk"
@@ -186,8 +204,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1856,
-        608
+        2464,
+        752
       ],
       "id": "bcfd98d7-8354-4f68-81a4-da51c192a9f2",
       "name": "HTTP Request for html to pdf",
@@ -232,8 +250,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1824,
-        816
+        2464,
+        944
       ],
       "id": "0e5d6c54-18ea-4eeb-acaa-1782974a9381",
       "name": "HTTP Request1 for html to docx",
@@ -253,33 +271,11 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
       "position": [
-        2064,
-        800
+        2688,
+        944
       ],
       "id": "af6a3231-52be-44be-962f-145d4a7a8995",
       "name": "Read/Write Files from Disk1"
-    },
-    {
-      "parameters": {
-        "formFields": {
-          "values": [
-            {
-              "fieldLabel": "What would you like the study material to focus on?",
-              "fieldName": "focus"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.form",
-      "typeVersion": 2.5,
-      "position": [
-        224,
-        608
-      ],
-      "id": "4a97ac1d-f37c-4f44-9747-a384e8302fa0",
-      "name": "Form",
-      "webhookId": "abd2ac92-0ba8-44e9-9a68-abd91e69b28c"
     },
     {
       "parameters": {
@@ -333,25 +329,6 @@
               },
               "renameOutput": true,
               "outputKey": "Summary"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "={{$('On form submission').item.json.output_type}}",
-                  "typeValidation": "strict",
-                  "version": 1,
-                  "rightValue": "Flashcards",
-                  "operator": {
-                    "type": "string",
-                    "operation": "equals"
-                  },
-                  "id": "3f172a1c-1736-4570-9a20-d0325eaba183"
-                },
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "Flashcards"
             }
           ]
         },
@@ -360,8 +337,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        448,
-        592
+        48,
+        848
       ],
       "id": "ac7f4682-d005-4b3c-878c-1915d7b3eee6",
       "name": "Switch"
@@ -429,8 +406,8 @@
       "type": "n8n-nodes-base.form",
       "typeVersion": 2.5,
       "position": [
-        672,
-        416
+        272,
+        752
       ],
       "id": "3f38a4f6-a015-4cd9-9402-9000c2dc5d41",
       "name": "Quiz Preferences Form Page",
@@ -493,81 +470,11 @@
       "type": "n8n-nodes-base.form",
       "typeVersion": 2.5,
       "position": [
-        672,
-        608
+        272,
+        944
       ],
       "id": "80f9edfd-ce96-4279-998d-b686c83caa04",
       "name": "Summary Preferences Form Page",
-      "webhookId": "244b049b-7c96-4269-bd48-0aa6a253a05e"
-    },
-    {
-      "parameters": {
-        "formFields": {
-          "values": [
-            {
-              "fieldLabel": "Flashcard style",
-              "fieldType": "dropdown",
-              "fieldName": "flashcard_style",
-              "fieldOptions": {
-                "values": [
-                  {
-                    "option": "Question & Answer"
-                  },
-                  {
-                    "option": "Term & Definition"
-                  },
-                  {
-                    "option": "Mixed"
-                  }
-                ]
-              },
-              "requiredField": true
-            },
-            {
-              "fieldLabel": "Difficulty",
-              "fieldType": "dropdown",
-              "fieldName": "flashcard_difficulty",
-              "fieldOptions": {
-                "values": [
-                  {
-                    "option": "Easy"
-                  },
-                  {
-                    "option": "Medium"
-                  },
-                  {
-                    "option": "Hard"
-                  },
-                  {
-                    "option": "Mixed"
-                  }
-                ]
-              },
-              "requiredField": true
-            },
-            {
-              "fieldLabel": "How many flashcards would you like?",
-              "fieldType": "number",
-              "fieldName": "flashcard_count",
-              "defaultValue": "20",
-              "requiredField": true
-            },
-            {
-              "fieldLabel": "Specific topics to focus on (optional)",
-              "fieldName": "flashcard_focus"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.form",
-      "typeVersion": 2.5,
-      "position": [
-        672,
-        800
-      ],
-      "id": "2b6bd0c9-999d-4652-bf35-109210d5f2f2",
-      "name": "Flashcard Preferences Form",
       "webhookId": "244b049b-7c96-4269-bd48-0aa6a253a05e"
     },
     {
@@ -579,8 +486,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        880,
-        288
+        496,
+        672
       ],
       "id": "a54113fb-604b-471e-96f2-67cbbbcc1521",
       "name": "Merge1"
@@ -594,8 +501,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        928,
-        752
+        496,
+        1008
       ],
       "id": "28ed450c-27ac-48d9-83b4-0c1d991e501e",
       "name": "Merge2"
@@ -660,11 +567,139 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        1600,
-        704
+        2240,
+        848
       ],
       "id": "be79a3a7-2f53-4067-81cb-fc2c09cc5550",
       "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f3d1c11b-d88e-44c1-9cc4-50ef27eca1e2",
+              "leftValue": "={{$json.lecture_source}}",
+              "rightValue": "Upload PDF",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -176,
+        1536
+      ],
+      "id": "94d2265b-7638-46f7-ab72-2150abc28d7d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{$json.google_drive_file}}",
+        "limit": 1,
+        "filter": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [
+        1264,
+        1072
+      ],
+      "id": "d9419866-14c5-4aac-adfb-e3118fcb62dd",
+      "name": "Search files and folders in Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "IKDT58V8Jru2dv9z",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a university study coach.\n\nYour job is to create the selected study material using ONLY the extracted lecture text provided to you.\n\nIMPORTANT:\n\n* The lecture PDF has already been retrieved and processed by the previous nodes.\n* Do NOT search Google Drive.\n* Do NOT download anything.\n* Do NOT search for the lecture file.\n* Do NOT use Google Drive to retrieve the source PDF.\n* Do NOT use outside knowledge.\n* Do NOT invent information.\n* Use ONLY the extracted lecture content provided below.\n* Generate the study material first.\n* After generating the study material, use the Google Drive Upload tool exactly once to upload the final generated file when the workflow requires it.\n\n---\n\nSelected output type:\n{{$json.output_type}}\n\nSelected output format:\n{{$json.output_format}}\n\nExtracted lecture content:\n{{$json.text}}\n\nYour task is to create ONLY the selected study material.\n\nCONTENT RULES:\n\n* Use simple English.\n* Stay faithful to the lecture content.\n* Do not add information that is not present in the lecture.\n* Do not include introductions or conclusions.\n* Do not explain your process.\n* Do not include any other study material type.\n* Do not use Markdown.\n* Return a complete HTML document.\n* The selected output format will be handled by later workflow nodes.\n\nIF OUTPUT TYPE IS \"Quiz\":\n\n* Create exactly 10 multiple-choice questions.\n* Each question must have exactly 4 options: A, B, C, D.\n* Every question and answer must be supported by the lecture content.\n* Do not test information that is not present in the lecture.\n* Show the correct answer after each question.\n* Use exactly this structure:\n\n<div class=\"question\">\n  <h2>Question 1</h2>\n  <p>Question text</p>\n  <ol class=\"options\" type=\"A\">\n    <li>Option A</li>\n    <li>Option B</li>\n    <li>Option C</li>\n    <li>Option D</li>\n  </ol>\n  <p class=\"correct\">Correct Answer: A</p>\n</div>\n\n* Put every option in its own <li>.\n* Never put multiple options inside one <p>.\n* Never use <br> to separate options.\n* Make the incorrect options plausible but clearly incorrect according to the lecture.\n* Output ONLY the quiz inside the HTML document.\n\nIF OUTPUT TYPE IS \"Summary\":\n\n* Create clear and concise study notes.\n* Organize the important concepts from the lecture.\n* Use meaningful headings and lists.\n* Preserve important definitions, explanations, examples, steps, formulas, and relationships from the lecture.\n* Do not add outside explanations.\n* Output ONLY the summary inside the HTML document.\n\nHTML OUTPUT RULES:\n\n* Start exactly with <!DOCTYPE html>.\n* Include <html>, <head>, <style>, and <body>.\n* Add a meaningful title based on the lecture topic.\n* Use valid HTML only.\n* Use headings, paragraphs, lists, and other appropriate HTML elements.\n* Do not use Markdown.\n* Do not use code fences.\n* Do not put any text before or after the HTML document.\n* Every <li> tag must start exactly as <li>.\n* Never output malformed tags such as <li%B>, <li%D>, <li*A>, or similar.\n* Never insert **, Markdown, or hidden markers inside HTML.\n* Validate that all HTML tags are properly opened and closed before returning the result.\n* The final response must contain ONLY the complete HTML document.\n\nUse exactly this CSS:\n\n<style>\nbody {\n    font-family: Arial, sans-serif;\n    margin: 40px;\n    line-height: 1.6;\n}\n\nh1 {\n    text-align: center;\n    margin-bottom: 30px;\n}\n\n.question {\n    margin-bottom: 30px;\n    page-break-inside: avoid;\n}\n\n.question h2 {\n    margin-bottom: 8px;\n}\n\n.options {\n    margin-top: 10px;\n    padding-left: 30px;\n}\n\n.options li {\n    margin-bottom: 8px;\n    padding-left: 5px;\n}\n\n.correct {\n    margin-top: 10px;\n    font-weight: bold;\n}\n</style>\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1744,
+        848
+      ],
+      "id": "78daa3e2-8c09-4305-9f71-98c521b47aa6",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "llama-3.3-70b-versatile",
+          "mode": "list",
+          "cachedResultName": "llama-3.3-70b-versatile"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1744,
+        1040
+      ],
+      "id": "9be102bf-75f5-4969-a885-0daf7612d2df",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "znbR2tkIWF2T2eYy",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [
+        1888,
+        1072
+      ],
+      "id": "cc8c9730-9724-4c49-84c5-06e425451660",
+      "name": "Upload file in Google Drive1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "IKDT58V8Jru2dv9z",
+          "name": "Google Drive account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -673,7 +708,7 @@
       "main": [
         [
           {
-            "node": "Switch1",
+            "node": "Extract from File",
             "type": "main",
             "index": 0
           }
@@ -706,12 +741,12 @@
       "main": [
         [
           {
-            "node": "Form",
+            "node": "Merge1",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Merge1",
+            "node": "If",
             "type": "main",
             "index": 0
           },
@@ -727,7 +762,7 @@
       "main": [
         [
           {
-            "node": "AI Agent",
+            "node": "AI Agent1",
             "type": "main",
             "index": 0
           }
@@ -756,17 +791,6 @@
         ]
       ]
     },
-    "Form": {
-      "main": [
-        [
-          {
-            "node": "Switch",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Switch": {
       "main": [
         [
@@ -782,13 +806,6 @@
             "type": "main",
             "index": 0
           }
-        ],
-        [
-          {
-            "node": "Flashcard Preferences Form",
-            "type": "main",
-            "index": 0
-          }
         ]
       ]
     },
@@ -801,11 +818,6 @@
             "index": 1
           }
         ]
-      ]
-    },
-    "Flashcard Preferences Form": {
-      "main": [
-        []
       ]
     },
     "Merge1": {
@@ -858,6 +870,68 @@
           }
         ]
       ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders in Google Drive": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file in Google Drive1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -866,7 +940,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "a3ecdfd4-3237-4009-a4c9-c95a90a5da69",
+  "versionId": "46194f7b-1bb1-4b0c-8944-c12d0048f8f6",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "59f08bec4ce6648d8f3ae280b6f14f77cb847d9bb1ce25449b420663754bd9fe"
