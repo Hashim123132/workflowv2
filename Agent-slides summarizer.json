@@ -4,16 +4,16 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=You are a personal study coach.\n\nWhen the user asks about lecture material, ALWAYS use the Google Drive tool first to retrieve the available lecture PDF.\n\nBase your answer on the retrieved lecture material.\nExplain concepts in simple English.\nDo not rely on general knowledge when the answer can be found in the lecture.\nIf the information is not present in the lecture, say so clearly.\n\nUser request:\n{{$json.body.message}}",
+        "text": "=You are a university study coach.\n\nThe user uploaded one lecture PDF.\n\nSelected output type:\n{{$('On form submission').item.json.output_type}}\n\nSelected output format:\n{{$('On form submission').item.json.output_format}}\n\nLecture content:\n{{$json.text}}\n\nYour task is to create ONLY the selected study material using ONLY the lecture content provided above.\n\nCONTENT RULES:\n- Do not use outside knowledge.\n- Do not invent information.\n- Use simple English.\n- Do not include introductions or conclusions.\n- Do not explain your process.\n- Do not include any other study material type.\n\nIF OUTPUT TYPE IS \"Quiz\":\n- Create exactly 10 multiple-choice questions.\n- Each question must have exactly 4 options: A, B, C, D.\n- Use this exact HTML structure for every question:\n\n<div class=\"question\">\n  <h2>Question 1</h2>\n  <p>Question text</p>\n  <ol class=\"options\" type=\"A\">\n    <li>Option A</li>\n    <li>Option B</li>\n    <li>Option C</li>\n    <li>Option D</li>\n  </ol>\n  <p class=\"correct\">Correct Answer: A</p>\n</div>\n\n- Put each option in its own <li> element.\n- Never put multiple options inside one <p>.\n- Never use <br> to separate options.\n- Show the correct answer after the options.\n- Output ONLY the quiz.\n\nIF OUTPUT TYPE IS \"Summary\":\n- Create clear and concise study notes.\n- Organize the important concepts from the lecture.\n- Output ONLY the summary.\n\nIF OUTPUT TYPE IS \"Flashcards\":\n- Create useful question-and-answer flashcards covering the important concepts.\n- Output ONLY the flashcards.\n\nHTML OUTPUT RULES:\n- Return a complete HTML document.\n- Start exactly with <!DOCTYPE html>.\n- Include <html>, <head>, <style>, and <body>.\n- Add a meaningful title based on the lecture topic.\n- Use headings, paragraphs, lists, and other appropriate HTML elements.\n- Add clean professional CSS inside <style>.\n- Make the document suitable for PDF conversion.\n- Do not use Markdown.\n- Do not use code fences.\n- Do not put any text before or after the HTML document.\n- The selected output format will be handled by later workflow nodes. Do not create or describe a file format.\n- Every HTML tag must be valid HTML.\n- Never modify HTML tag syntax.\n- Every <li> tag must start exactly as <li>.\n- Never output malformed tags such as <li%B, <li%D, <li*A, or similar.\n- Never insert **, markdown, or hidden markers inside HTML.\n- Before returning the HTML, validate that all HTML tags are syntactically valid.\n- use this style\n<style>\nbody {\n    font-family: Arial, sans-serif;\n    margin: 40px;\n    line-height: 1.6;\n}\n\nh1 {\n    text-align: center;\n    margin-bottom: 30px;\n}\n\n.question {\n    margin-bottom: 30px;\n    page-break-inside: avoid;\n}\n\n.question h2 {\n    margin-bottom: 8px;\n}\n\n.options {\n    margin-top: 10px;\n    padding-left: 30px;\n}\n\n.options li {\n    margin-bottom: 8px;\n    padding-left: 5px;\n}\n\n.correct {\n    margin-top: 10px;\n    font-weight: bold;\n}\n</style>",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -48,
-        -64
+        1344,
+        704
       ],
-      "id": "71d35c50-352a-4c05-869d-eb74560ac699",
+      "id": "b59c60b7-5b6c-464b-80bd-14523dc320e6",
       "name": "AI Agent"
     },
     {
@@ -30,10 +30,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        -48,
-        160
+        1352,
+        936
       ],
-      "id": "66c8fdf3-e08a-4537-b067-f3b898e4141d",
+      "id": "220a2920-f856-4790-bf23-205ebe3e008b",
       "name": "OpenAI Chat Model1",
       "credentials": {
         "openAiApi": {
@@ -41,22 +41,6 @@
           "name": "OpenAI account"
         }
       }
-    },
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "study-coach",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
-      "position": [
-        -320,
-        -48
-      ],
-      "id": "4fb45ea7-1dc9-496f-b6fd-7646dab2dbb3",
-      "name": "Webhook",
-      "webhookId": "626fe207-6fd2-4b43-b131-0abdce17d04f"
     },
     {
       "parameters": {
@@ -73,10 +57,10 @@
       "type": "n8n-nodes-base.googleDriveTool",
       "typeVersion": 3,
       "position": [
-        96,
-        208
+        1480,
+        936
       ],
-      "id": "e1505699-bd68-4e96-9e86-9d0d3a976a20",
+      "id": "3ffebd87-bab8-4f40-81d1-4d9fcf40ec9c",
       "name": "Download file in Google Drive",
       "credentials": {
         "googleDriveOAuth2Api": {
@@ -84,27 +68,624 @@
           "name": "Google Drive account"
         }
       }
+    },
+    {
+      "parameters": {
+        "formTitle": "University Lecture Study Coach",
+        "formDescription": "Upload one lecture PDF and choose the type of study material you want to create.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Lecture PDF",
+              "fieldType": "file",
+              "fieldName": "lecture_file"
+            },
+            {
+              "fieldLabel": "What would you like to create?",
+              "fieldType": "dropdown",
+              "fieldName": "output_type",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Summary"
+                  },
+                  {
+                    "option": "Flashcards"
+                  },
+                  {
+                    "option": "Quiz"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Output format",
+              "fieldType": "dropdown",
+              "fieldName": "output_format",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "PDF"
+                  },
+                  {
+                    "option": "DOCX"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -496,
+        624
+      ],
+      "id": "8cbfc752-0f2a-44bd-8621-80f14625eaf4",
+      "name": "On form submission",
+      "webhookId": "15a393e5-fc25-4355-96ad-2d82e7f7200d"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "lecture_file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        704
+      ],
+      "id": "bcd90bb3-4e10-42a3-aaa7-2d002ccaafde",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/files/{{$('On form submission').item.binary.lecture_file.fileName.replace(/\\.[^/.]+$/, '')}} - {{$('On form submission').item.json.output_type}}.{{$('On form submission').item.json.output_format.toLowerCase()}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        2032,
+        608
+      ],
+      "id": "ec422988-78b9-40bc-a70e-a2258b2a37c7",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdfshift.io/v3/convert/pdf",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "source",
+              "value": "={{$('AI Agent').item.json.output}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1856,
+        608
+      ],
+      "id": "bcfd98d7-8354-4f68-81a4-da51c192a9f2",
+      "name": "HTTP Request for html to pdf",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "JX5odizl8p0XcQK9",
+          "name": "Unnamed credential 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.nutrient.io/build",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "document",
+              "value": "={{$('AI Agent').item.json.output}}"
+            },
+            {
+              "name": "instructions",
+              "value": "={\"parts\":[{\"html\":\"document\"}],\"output\":{\"type\":\"docx\"}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1824,
+        816
+      ],
+      "id": "0e5d6c54-18ea-4eeb-acaa-1782974a9381",
+      "name": "HTTP Request1 for html to docx",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "0A2Z5ql8iiZFpppG",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/files/{{$('On form submission').item.binary.lecture_file.fileName.replace(/\\.[^/.]+$/, '')}} - {{$('On form submission').item.json.output_type}}.{{$('On form submission').item.json.output_format.toLowerCase()}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        2064,
+        800
+      ],
+      "id": "af6a3231-52be-44be-962f-145d4a7a8995",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "What would you like the study material to focus on?",
+              "fieldName": "focus"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        224,
+        608
+      ],
+      "id": "4a97ac1d-f37c-4f44-9747-a384e8302fa0",
+      "name": "Form",
+      "webhookId": "abd2ac92-0ba8-44e9-9a68-abd91e69b28c"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$('On form submission').item.json.output_type}}",
+                    "rightValue": "Quiz",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c0fd387a-4c6d-472f-9540-ad41c3d16b33"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Quiz"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e63c36e8-f104-4f23-8d57-7b6723e38173",
+                    "leftValue": "={{$('On form submission').item.json.output_type}}",
+                    "rightValue": "Summary",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Summary"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "={{$('On form submission').item.json.output_type}}",
+                  "typeValidation": "strict",
+                  "version": 1,
+                  "rightValue": "Flashcards",
+                  "operator": {
+                    "type": "string",
+                    "operation": "equals"
+                  },
+                  "id": "3f172a1c-1736-4570-9a20-d0325eaba183"
+                },
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Flashcards"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        592
+      ],
+      "id": "ac7f4682-d005-4b3c-878c-1915d7b3eee6",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "What type of quiz would you like?",
+              "fieldType": "dropdown",
+              "fieldName": "quiz_type",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Multiple Choice"
+                  },
+                  {
+                    "option": "Short Answer"
+                  },
+                  {
+                    "option": "Mixed"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "What difficulty level?",
+              "fieldType": "dropdown",
+              "fieldName": "difficulty",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Easy"
+                  },
+                  {
+                    "option": "Medium"
+                  },
+                  {
+                    "option": "Hard"
+                  },
+                  {
+                    "option": "Mixed"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "How many questions would you like?",
+              "fieldType": "number",
+              "fieldName": "question_count",
+              "defaultValue": "10",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Specific topics to focus on (optional)",
+              "fieldName": "quiz_focus"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        672,
+        416
+      ],
+      "id": "3f38a4f6-a015-4cd9-9402-9000c2dc5d41",
+      "name": "Quiz Preferences Form Page",
+      "webhookId": "244b049b-7c96-4269-bd48-0aa6a253a05e"
+    },
+    {
+      "parameters": {
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Summary style",
+              "fieldType": "dropdown",
+              "fieldName": "summary_style",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Concise"
+                  },
+                  {
+                    "option": "Detailed"
+                  },
+                  {
+                    "option": "Exam-focused"
+                  },
+                  {
+                    "option": "Key points only"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Coverage",
+              "fieldType": "dropdown",
+              "fieldName": "summary_coverage",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Whole lecture"
+                  },
+                  {
+                    "option": "Important concepts only"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Summary length (optional)",
+              "fieldName": "summary_length"
+            },
+            {
+              "fieldLabel": "Specific topics to focus on (optional)",
+              "fieldName": "summary_focus"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        672,
+        608
+      ],
+      "id": "80f9edfd-ce96-4279-998d-b686c83caa04",
+      "name": "Summary Preferences Form Page",
+      "webhookId": "244b049b-7c96-4269-bd48-0aa6a253a05e"
+    },
+    {
+      "parameters": {
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Flashcard style",
+              "fieldType": "dropdown",
+              "fieldName": "flashcard_style",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Question & Answer"
+                  },
+                  {
+                    "option": "Term & Definition"
+                  },
+                  {
+                    "option": "Mixed"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Difficulty",
+              "fieldType": "dropdown",
+              "fieldName": "flashcard_difficulty",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Easy"
+                  },
+                  {
+                    "option": "Medium"
+                  },
+                  {
+                    "option": "Hard"
+                  },
+                  {
+                    "option": "Mixed"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "How many flashcards would you like?",
+              "fieldType": "number",
+              "fieldName": "flashcard_count",
+              "defaultValue": "20",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Specific topics to focus on (optional)",
+              "fieldName": "flashcard_focus"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        672,
+        800
+      ],
+      "id": "2b6bd0c9-999d-4652-bf35-109210d5f2f2",
+      "name": "Flashcard Preferences Form",
+      "webhookId": "244b049b-7c96-4269-bd48-0aa6a253a05e"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        880,
+        288
+      ],
+      "id": "a54113fb-604b-471e-96f2-67cbbbcc1521",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        928,
+        752
+      ],
+      "id": "28ed450c-27ac-48d9-83b4-0c1d991e501e",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$('On form submission').item.json.output_format}}",
+                    "rightValue": "PDF",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "a109c8ac-3aa6-454c-9d35-18e046a3f0eb"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "1f79033e-b94a-4eda-bca2-6e5f2b9fd624",
+                    "leftValue": "={{$('On form submission').item.json.output_format}}",
+                    "rightValue": "DOCX",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DOCX"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1600,
+        704
+      ],
+      "id": "be79a3a7-2f53-4067-81cb-fc2c09cc5550",
+      "name": "Switch1"
     }
   ],
   "pinData": {},
   "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "OpenAI Chat Model1": {
       "ai_languageModel": [
         [
           {
             "node": "AI Agent",
             "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Webhook": {
-      "main": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "main",
             "index": 0
           }
         ]
@@ -120,6 +701,163 @@
           }
         ]
       ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Form",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request for html to pdf": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1 for html to docx": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Form": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Quiz Preferences Form Page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Summary Preferences Form Page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Flashcard Preferences Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summary Preferences Form Page": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Flashcard Preferences Form": {
+      "main": [
+        []
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quiz Preferences Form Page": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request for html to pdf",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request1 for html to docx",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -128,7 +866,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "7e03f6a9-06f0-48e3-9863-121c407144bd",
+  "versionId": "a3ecdfd4-3237-4009-a4c9-c95a90a5da69",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "59f08bec4ce6648d8f3ae280b6f14f77cb847d9bb1ce25449b420663754bd9fe"
