@@ -3,47 +3,6 @@
   "nodes": [
     {
       "parameters": {
-        "promptType": "define",
-        "text": "=You are a Google Drive file-finding agent.\n\nThe user selected Google Drive as the lecture PDF source.\n\nFile name/search text:\n{{$json.google_drive_file}}\n\nYour ONLY job is to find the requested lecture PDF in Google Drive.\n\n1. Use the Google Drive \"Search files and folders\" tool.\n2. Find the requested PDF.\n3. Get the exact file ID from the search result.\n4. Do NOT download the file.\n5. Do NOT use Easybits.\n6. Do NOT extract text.\n7. Do NOT search again.\n8. Do NOT create summaries, notes, quizzes, or study material.\n\nAfter finding the file, return ONLY the exact file ID as plain text.\n\nExample:\n12HmXnXfCsxQ-JuvoLjxMemvNM-b7Uzit\n\nIf the file cannot be found, return exactly:\nFILE_NOT_FOUND\n\nNever invent a file ID.",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        -800,
-        976
-      ],
-      "id": "38c2a08a-0259-4b73-ac9d-811ce5e93cf8",
-      "name": "AI Agent"
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "openai/gpt-oss-120b",
-          "mode": "list",
-          "cachedResultName": "openai/gpt-oss-120b"
-        },
-        "builtInTools": {},
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.3,
-      "position": [
-        -864,
-        1200
-      ],
-      "id": "cbd305d7-eebd-4f60-8ece-a70f9fdf989e",
-      "name": "OpenAI Chat Model1",
-      "credentials": {
-        "openAiApi": {
-          "id": "TM4NwhazALbbD5ec",
-          "name": "OpenAI account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "formTitle": "University Lecture Study Coach",
         "formDescription": "Upload one lecture PDF and choose the type of study material you want to create.",
         "formFields": {
@@ -122,118 +81,6 @@
     },
     {
       "parameters": {
-        "operation": "write",
-        "fileName": "=/files/{{$binary.lecture_file.fileName.replace(/\\.[^/.]+$/, '')}} - {{$('On form submission').first().json.output_type}}.{{$('On form submission').first().json.output_format.toLowerCase()}}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.readWriteFile",
-      "typeVersion": 1.1,
-      "position": [
-        944,
-        800
-      ],
-      "id": "02cd600f-7f7d-47e1-8f10-5b8899befeec",
-      "name": "Read/Write Files from Disk"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.pdfshift.io/v3/convert/pdf",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBasicAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "source",
-              "value": "={{ $json.output }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        720,
-        800
-      ],
-      "id": "55054eb9-4a22-4a52-b8fc-1d3c7e7d8356",
-      "name": "HTTP Request for html to pdf",
-      "credentials": {
-        "httpBasicAuth": {
-          "id": "YBjVQAYGREtX9o8P",
-          "name": "API KEY"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.nutrient.io/build",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": []
-        },
-        "sendBody": true,
-        "contentType": "multipart-form-data",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "document",
-              "value": "={{ $('AI Agent1').item.json.output }}"
-            },
-            {
-              "name": "instructions",
-              "value": "={\"parts\":[{\"html\":\"document\"}],\"output\":{\"type\":\"docx\"}}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        720,
-        992
-      ],
-      "id": "425c03bd-19a5-444f-805c-320206a9287e",
-      "name": "HTTP Request1 for html to docx",
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "mwf5RG6n0ut5OrzH",
-          "name": "API key"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "write",
-        "fileName": "={{ $('On form submission').first().json.lecture_file }}-quiz.docx",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.readWriteFile",
-      "typeVersion": 1.1,
-      "position": [
-        944,
-        992
-      ],
-      "id": "e9ad1760-621c-4fa2-8171-913d3ed7fbf1",
-      "name": "Read/Write Files from Disk1"
-    },
-    {
-      "parameters": {
         "rules": {
           "values": [
             {
@@ -246,7 +93,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{$('On form submission').item.json.output_type}}",
+                    "leftValue": "={{ $('On form submission').first().json.output_type }}",
                     "rightValue": "Quiz",
                     "operator": {
                       "type": "string",
@@ -271,7 +118,7 @@
                 "conditions": [
                   {
                     "id": "e63c36e8-f104-4f23-8d57-7b6723e38173",
-                    "leftValue": "={{$('On form submission').item.json.output_type}}",
+                    "leftValue": "={{ $('On form submission').first().json.output_type }}",
                     "rightValue": "Summary",
                     "operator": {
                       "type": "string",
@@ -292,8 +139,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -1712,
-        960
+        -256,
+        1120
       ],
       "id": "b84b8c4d-ca63-487f-b9e7-b72c1b66d349",
       "name": "Switch"
@@ -361,8 +208,8 @@
       "type": "n8n-nodes-base.form",
       "typeVersion": 2.5,
       "position": [
-        -1488,
-        864
+        16,
+        976
       ],
       "id": "ffe3e6d9-9a69-4d7d-ad32-0f9004a335ba",
       "name": "Quiz Preferences Form Page",
@@ -425,42 +272,12 @@
       "type": "n8n-nodes-base.form",
       "typeVersion": 2.5,
       "position": [
-        -1488,
-        1056
+        32,
+        1184
       ],
       "id": "2bef81c5-f12e-448d-8788-f25901c6a655",
       "name": "Summary Preferences Form Page",
       "webhookId": "244b049b-7c96-4269-bd48-0aa6a253a05e"
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineByPosition",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        -1136,
-        688
-      ],
-      "id": "722296f4-2081-448b-9bbb-c0c008835f55",
-      "name": "Merge1"
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineByPosition",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        -1136,
-        880
-      ],
-      "id": "f3649ec9-691d-404e-ae94-5deb5c3af5e6",
-      "name": "Merge2"
     },
     {
       "parameters": {
@@ -522,8 +339,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        496,
-        896
+        1760,
+        1040
       ],
       "id": "1a3b3921-8f86-4914-9149-f4f8b6d4c331",
       "name": "Switch1"
@@ -564,38 +381,15 @@
     },
     {
       "parameters": {
-        "resource": "fileFolder",
-        "queryString": "={{ $json.google_drive_file }}",
-        "limit": 1,
-        "filter": {},
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleDriveTool",
-      "typeVersion": 3,
-      "position": [
-        -608,
-        1200
-      ],
-      "id": "dae550c3-31a2-47f5-9e2f-c5a3cdcce93d",
-      "name": "Search files and folders in Google Drive",
-      "credentials": {
-        "googleDriveOAuth2Api": {
-          "id": "hmFKUE6YA7aLgTT1",
-          "name": "Google Drive account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "promptType": "define",
-        "text": "=You are a university study material generator.\n\nYour ONLY job is to generate the requested study material from the extracted lecture text.\n\nIMPORTANT:\n- Use ONLY the extracted lecture text provided below.\n- Do NOT use Google Drive.\n- Do NOT search for files.\n- Do NOT download files.\n- Do NOT use external knowledge.\n- Do NOT invent information.\n- Do NOT use any tools.\n- Do NOT upload files.\n- The workflow will handle file conversion and saving after you finish.\n- Your output MUST be a complete HTML document.\n\nINPUTS\n\nSelected output type:\n{{ $('On form submission').first().json.output_type }}\n\nSelected output format:\n{{ $('On form submission').first().json.output_format }}\n\nExtracted lecture text:\n{{ $('Extract from File').item.json.text }}\n\nOUTPUT TYPE RULES\n\nIf output type is \"Summary\":\n\nCreate clear, simple study notes using ONLY the lecture text.\n\nInclude:\n- Important definitions\n- Key concepts\n- Important examples\n- Algorithms and steps\n- Formulas\n- Important observations\n- Important comparisons\n- Key takeaways\n\nDo not add outside information.\n\nIf output type is \"Quiz\":\n\nCreate EXACTLY 10 multiple-choice questions.\n\nEach question MUST have:\n- One question\n- Exactly 4 options\n- Options A, B, C, D\n- Correct answer\n\nEvery question and answer MUST be supported directly by the lecture text.\n\nUse exactly this structure:\n\n<div class=\"question\">\n  <h2>Question 1</h2>\n  <p>Question text</p>\n  <ol class=\"options\" type=\"A\">\n    <li>Option A</li>\n    <li>Option B</li>\n    <li>Option C</li>\n    <li>Option D</li>\n  </ol>\n  <p class=\"correct\">Correct Answer: A</p>\n</div>\n\nDo not put multiple options in one element.\n\nDo not use <br> to separate options.\n\nHTML REQUIREMENTS\n\nReturn ONLY a complete HTML document.\n\nThe document MUST:\n\n1. Start exactly with:\n<!DOCTYPE html>\n\n2. Contain:\n<html>\n<head>\n<style>\n<body>\n\n3. Use this exact CSS:\n\n<style>\nbody {\n    font-family: Arial, sans-serif;\n    margin: 40px;\n    line-height: 1.6;\n}\n\nh1 {\n    text-align: center;\n    margin-bottom: 30px;\n}\n\n.question {\n    margin-bottom: 30px;\n    page-break-inside: avoid;\n}\n\n.question h2 {\n    margin-bottom: 8px;\n}\n\n.options {\n    margin-top: 10px;\n    padding-left: 30px;\n}\n\n.options li {\n    margin-bottom: 8px;\n    padding-left: 5px;\n}\n\n.correct {\n    margin-top: 10px;\n    font-weight: bold;\n}\n</style>\n\n4. Add a meaningful <title> based on the lecture topic.\n\n5. Add an <h1> containing the lecture topic.\n\n6. Use valid HTML.\n\n7. Properly close every HTML tag.\n\n8. Every list item MUST begin exactly with:\n<li>\n\n9. Never output:\n- Markdown\n- Code fences\n- **\n- Explanations of your process\n- Text before <!DOCTYPE html>\n- Text after </html>\n\n\nIMPORTANT:\nThe quiz MUST contain exactly 10 questions. Do not return an empty quiz.\n\nYou MUST generate all 10 questions directly from the Extracted lecture text.\n\nEach question must contain:\n- Question text\n- Exactly 4 options\n- Correct answer\n\nDo not stop after creating the HTML structure. The <body> MUST contain all 10 question blocks.\n\nIMPORTANT VALIDATION\n\nBefore returning the response, verify:\n\n- The selected output type is being followed.\n- Summary = study notes only.\n- Quiz = exactly 10 questions.\n- Quiz = exactly 4 options per question.\n- All content comes ONLY from the lecture text.\n- HTML is valid and properly closed.\n- The response contains ONLY the HTML document.\n\nReturn the final HTML document now.",
+        "text": "=You are a university study material generator.\n\nYour ONLY job is to generate the requested study material from the extracted lecture text.\n\nIMPORTANT:\n- Use ONLY the extracted lecture text provided below.\n- Do NOT use Google Drive.\n- Do NOT search for files.\n- Do NOT download files.\n- Do NOT use external knowledge.\n- Do NOT invent information.\n- Do NOT use any tools.\n- Do NOT upload files.\n- The workflow will handle file conversion and saving after you finish.\n- Your output MUST be a complete HTML document.\n\nINPUTS\n\nSelected output type:\n{{ $('On form submission').first().json.output_type }}\n\nSelected output format:\n{{ $('On form submission').first().json.output_format }}\n\nExtracted lecture text:\n{{ $('Extract from File').first().json.text }}\nOUTPUT TYPE RULES\n\nIf output type is \"Summary\":\n\nCreate clear, simple study notes using ONLY the lecture text.\n\nInclude:\n- Important definitions\n- Key concepts\n- Important examples\n- Algorithms and steps\n- Formulas\n- Important observations\n- Important comparisons\n- Key takeaways\n\nDo not add outside information.\n\nIf output type is \"Quiz\":\n\nCreate EXACTLY 10 multiple-choice questions.\n\nEach question MUST have:\n- One question\n- Exactly 4 options\n- Options A, B, C, D\n- Correct answer\n\nEvery question and answer MUST be supported directly by the lecture text.\n\nUse exactly this structure:\n\n<div class=\"question\">\n  <h2>Question 1</h2>\n  <p>Question text</p>\n  <ol class=\"options\" type=\"A\">\n    <li>Option A</li>\n    <li>Option B</li>\n    <li>Option C</li>\n    <li>Option D</li>\n  </ol>\n  <p class=\"correct\">Correct Answer: A</p>\n</div>\n\nDo not put multiple options in one element.\n\nDo not use <br> to separate options.\n\nHTML REQUIREMENTS\n\nReturn ONLY a complete HTML document.\n\nThe document MUST:\n\n1. Start exactly with:\n<!DOCTYPE html>\n\n2. Contain:\n<html>\n<head>\n<style>\n<body>\n\n3. Use this exact CSS:\n\n<style>\nbody {\n    font-family: Arial, sans-serif;\n    margin: 40px;\n    line-height: 1.6;\n}\n\nh1 {\n    text-align: center;\n    margin-bottom: 30px;\n}\n\n.question {\n    margin-bottom: 30px;\n    page-break-inside: avoid;\n}\n\n.question h2 {\n    margin-bottom: 8px;\n}\n\n.options {\n    margin-top: 10px;\n    padding-left: 30px;\n}\n\n.options li {\n    margin-bottom: 8px;\n    padding-left: 5px;\n}\n\n.correct {\n    margin-top: 10px;\n    font-weight: bold;\n}\n</style>\n\n4. Add a meaningful <title> based on the lecture topic.\n\n5. Add an <h1> containing the lecture topic.\n\n6. Use valid HTML.\n\n7. Properly close every HTML tag.\n\n8. Every list item MUST begin exactly with:\n<li>\n\n9. Never output:\n- Markdown\n- Code fences\n- **\n- Explanations of your process\n- Text before <!DOCTYPE html>\n- Text after </html>\n\n\nIMPORTANT:\nThe quiz MUST contain exactly 10 questions. Do not return an empty quiz.\n\nYou MUST generate all 10 questions directly from the Extracted lecture text.\n\nEach question must contain:\n- Question text\n- Exactly 4 options\n- Correct answer\n\nDo not stop after creating the HTML structure. The <body> MUST contain all 10 question blocks.\n\nIMPORTANT VALIDATION\n\nBefore returning the response, verify:\n\n- The selected output type is being followed.\n- Summary = study notes only.\n- Quiz = exactly 10 questions.\n- Quiz = exactly 4 options per question.\n- All content comes ONLY from the lecture text.\n- HTML is valid and properly closed.\n- The response contains ONLY the HTML document.\n\nReturn the final HTML document now.",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        32,
-        816
+        976,
+        1024
       ],
       "id": "dbbc64cf-9f7a-43d1-a129-5d9d3bbd69e0",
       "name": "AI Agent1"
@@ -614,8 +408,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        32,
-        1136
+        912,
+        1280
       ],
       "id": "ca9cf068-80ba-4e18-8ea1-9811ddee1d3c",
       "name": "OpenAI Chat Model",
@@ -628,40 +422,10 @@
     },
     {
       "parameters": {
-        "driveId": {
-          "__rl": true,
-          "mode": "list",
-          "value": "My Drive"
-        },
-        "folderId": {
-          "__rl": true,
-          "mode": "list",
-          "value": "root",
-          "cachedResultName": "/ (Root folder)"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleDriveTool",
-      "typeVersion": 3,
-      "position": [
-        160,
-        1136
-      ],
-      "id": "2842e6c3-c5f2-4c35-9dc1-cb1682e2659b",
-      "name": "Upload file in Google Drive1",
-      "credentials": {
-        "googleDriveOAuth2Api": {
-          "id": "hmFKUE6YA7aLgTT1",
-          "name": "Google Drive account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "operation": "download",
         "fileId": {
           "__rl": true,
-          "value": "={{ $('AI Agent').first().json.output }}",
+          "value": "={{ $('File Finder Agent').first().json.output }}",
           "mode": "id"
         },
         "options": {}
@@ -669,8 +433,8 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        -384,
-        960
+        -912,
+        1184
       ],
       "id": "cb9fb4f5-77f6-47c3-bddd-5286e3216895",
       "name": "Download file",
@@ -684,79 +448,202 @@
     {
       "parameters": {
         "operation": "pdf",
+        "binaryPropertyName": "lecture_file",
         "options": {}
       },
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        -192,
-        960
+        -576,
+        1184
       ],
       "id": "1473ef1c-53de-40d8-ab6e-b6293721dcec",
       "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "openai/gpt-oss-120b",
+          "mode": "list",
+          "cachedResultName": "openai/gpt-oss-120b"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -1312,
+        1408
+      ],
+      "id": "7b3e3fbc-aaf7-409b-be1e-928f40eaf39e",
+      "name": "OpenAI Chat Model - Drive Finder",
+      "credentials": {
+        "openAiApi": {
+          "id": "TM4NwhazALbbD5ec",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{ $('On form submission').first().json.google_drive_file }}",
+        "limit": 1,
+        "filter": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [
+        -1072,
+        1408
+      ],
+      "id": "015a1640-7cf7-4d25-bc96-b9a2a040a71c",
+      "name": "Search files and folders in Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "hmFKUE6YA7aLgTT1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Google Drive file-finding agent.\n\nThe user selected Google Drive as the lecture PDF source.\n\nFile name/search text:\n{{ $('On form submission').first().json.google_drive_file }}\n\nYour ONLY job is to find the requested lecture PDF in Google Drive.\n\n1. Use the Google Drive \"Search files and folders\" tool exactly once.\n2. Find the requested PDF.\n3. Get the exact file ID from the search result.\n4. Do NOT download the file.\n5. Do NOT use Easybits.\n6. Do NOT extract text.\n7. Do NOT search again.\n8. Do NOT create summaries, notes, quizzes, or study material.\n9. Do NOT invent a file ID.\n\nAfter finding the file, return ONLY the exact file ID as plain text.\n\nExample:\n12HmXnXfCsxQ-JuvoLjxMemvNM-b7Uzit\n\nIf the file cannot be found, return exactly:\nFILE_NOT_FOUND\n\nReturn nothing except the file ID or FILE_NOT_FOUND.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -1312,
+        1184
+      ],
+      "id": "1ab67c46-42f4-41af-a87c-3a12bb0af24a",
+      "name": "File Finder Agent"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdfshift.io/v3/convert/pdf",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "source",
+              "value": "={{ $('AI Agent1').first().json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2160,
+        944
+      ],
+      "id": "39e00f11-926c-49fb-8d4f-2240f16e145e",
+      "name": "HTML to PDF",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "YBjVQAYGREtX9o8P",
+          "name": "API KEY"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/files/{{ $('On form submission').first().json.google_drive_file || $('On form submission').first().binary.lecture_file.fileName }} - {{ $('On form submission').first().json.output_type }}.pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        2400,
+        944
+      ],
+      "id": "082d83ac-09c6-453b-9465-8786ead012df",
+      "name": "Save PDF"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.nutrient.io/build",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "document",
+              "value": "={{ $('AI Agent1').first().json.output }}"
+            },
+            {
+              "name": "instructions",
+              "value": "={\"parts\":[{\"html\":\"document\"}],\"output\":{\"type\":\"docx\"}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2160,
+        1152
+      ],
+      "id": "09e69d6c-1f3c-4f87-a35f-a2efbfe183a9",
+      "name": "HTML to DOCX",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "mwf5RG6n0ut5OrzH",
+          "name": "API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/files/{{ $('On form submission').first().json.google_drive_file || $('On form submission').first().binary.lecture_file.fileName }} - {{ $('On form submission').first().json.output_type }}.docx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        2400,
+        1152
+      ],
+      "id": "d50caf7b-6845-452e-ab6c-ec394b17d8ce",
+      "name": "Save DOCX"
     }
   ],
   "pinData": {},
   "connections": {
-    "AI Agent": {
-      "main": [
-        [
-          {
-            "node": "Download file",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenAI Chat Model1": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "On form submission": {
       "main": [
         [
           {
-            "node": "Merge1",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "If",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request for html to pdf": {
-      "main": [
-        [
-          {
-            "node": "Read/Write Files from Disk",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request1 for html to docx": {
-      "main": [
-        [
-          {
-            "node": "Read/Write Files from Disk1",
             "type": "main",
             "index": 0
           }
@@ -785,28 +672,6 @@
       "main": [
         [
           {
-            "node": "Merge2",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge1": {
-      "main": [
-        [
-          {
-            "node": "AI Agent1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Merge2": {
-      "main": [
-        [
-          {
             "node": "AI Agent1",
             "type": "main",
             "index": 0
@@ -818,9 +683,9 @@
       "main": [
         [
           {
-            "node": "Merge1",
+            "node": "AI Agent1",
             "type": "main",
-            "index": 1
+            "index": 0
           }
         ]
       ]
@@ -829,14 +694,14 @@
       "main": [
         [
           {
-            "node": "HTTP Request for html to pdf",
+            "node": "HTML to PDF",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "HTTP Request1 for html to docx",
+            "node": "HTML to DOCX",
             "type": "main",
             "index": 0
           }
@@ -847,26 +712,15 @@
       "main": [
         [
           {
-            "node": "Switch",
+            "node": "Extract from File",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "AI Agent",
+            "node": "File Finder Agent",
             "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Search files and folders in Google Drive": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_tool",
             "index": 0
           }
         ]
@@ -878,17 +732,6 @@
           {
             "node": "AI Agent1",
             "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Upload file in Google Drive1": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Agent1",
-            "type": "ai_tool",
             "index": 0
           }
         ]
@@ -920,7 +763,62 @@
       "main": [
         [
           {
-            "node": "AI Agent1",
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model - Drive Finder": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "File Finder Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders in Google Drive": {
+      "ai_tool": [
+        [
+          {
+            "node": "File Finder Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File Finder Agent": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML to PDF": {
+      "main": [
+        [
+          {
+            "node": "Save PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML to DOCX": {
+      "main": [
+        [
+          {
+            "node": "Save DOCX",
             "type": "main",
             "index": 0
           }
@@ -934,7 +832,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "b2267add-7396-4655-a5f1-acaaf0429d89",
+  "versionId": "41c6a010-c839-4796-8095-9cad54dd9b7c",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "7b625ca2a1e2f75b174e5680d2f590b3b6ff24ebd8a70090147140b3f73c3e3d"
